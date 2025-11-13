@@ -7,9 +7,9 @@ import lombok.Getter;
  */
 @Getter
 public class BinaryOperationNode extends ASTNode {
-    private String operator;
-    private ASTNode left;
-    private ASTNode right;
+    private final String operator;
+    private final ASTNode left;
+    private final ASTNode right;
 
     public BinaryOperationNode(String operator, ASTNode left, ASTNode right) {
         this.operator = operator;
@@ -22,23 +22,19 @@ public class BinaryOperationNode extends ASTNode {
         double leftValue = left.evaluate();
         double rightValue = right.evaluate();
 
-        switch (operator) {
-            case "+":
-                return leftValue + rightValue;
-            case "-":
-                return leftValue - rightValue;
-            case "*":
-                return leftValue * rightValue;
-            case "/":
+        return switch (operator) {
+            case "+" -> leftValue + rightValue;
+            case "-" -> leftValue - rightValue;
+            case "*" -> leftValue * rightValue;
+            case "/" -> {
                 if (rightValue == 0) {
                     throw new Exception("División por cero");
                 }
-                return leftValue / rightValue;
-            case "^":
-                return Math.pow(leftValue, rightValue);
-            default:
-                throw new Exception("Operador desconocido: " + operator);
-        }
+                yield leftValue / rightValue;
+            }
+            case "^" -> Math.pow(leftValue, rightValue);
+            default -> throw new Exception("Operador desconocido: " + operator);
+        };
     }
 
     @Override

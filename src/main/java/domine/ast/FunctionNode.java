@@ -7,8 +7,8 @@ import lombok.Getter;
  */
 @Getter
 public class FunctionNode extends ASTNode {
-    private String functionName;
-    private ASTNode argument;
+    private final String functionName;
+    private final ASTNode argument;
 
     public FunctionNode(String functionName, ASTNode argument) {
         this.functionName = functionName;
@@ -19,16 +19,12 @@ public class FunctionNode extends ASTNode {
     public double evaluate() throws Exception {
         double argValue = argument.evaluate();
 
-        switch (functionName.toLowerCase()) {
-            case "sin":
-                return Math.sin(argValue);
-            case "cos":
-                return Math.cos(argValue);
-            case "tan":
-                return Math.tan(argValue);
-            default:
-                throw new Exception("Función desconocida: " + functionName);
-        }
+        return switch (functionName.toLowerCase()) {
+            case "sen", "sin" -> Math.sin(argValue);
+            case "cos" -> Math.cos(argValue);
+            case "tan" -> Math.tan(argValue);
+            default -> throw new Exception("Función desconocida: " + functionName);
+        };
     }
 
     @Override

@@ -1,6 +1,8 @@
 package domine;
 
 import domine.ast.*;
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +12,14 @@ public class Parser {
     private List<Token> tokens;
     private int currentTokenIndex;
     private Token currentToken;
-    private Map<String, Double> variableValues;
+    @Getter
+    private ASTNode astNode;
+    /**
+     * -- GETTER --
+     *  Get variable values map for external manipulation
+     */
+    @Getter
+    private final Map<String, Double> variableValues;
     private Scanner scanner;
 
     public Parser(List<Token> tokens) {
@@ -42,15 +51,9 @@ public class Parser {
 
         // Request variable values before evaluation
         requestVariableValues(ast);
+        astNode =  ast;
 
         return ast.evaluate();
-    }
-
-    /**
-     * Get variable values map for external manipulation
-     */
-    public Map<String, Double> getVariableValues() {
-        return variableValues;
     }
 
     /**
@@ -232,4 +235,5 @@ public class Parser {
             scanner.close();
         }
     }
+
 }

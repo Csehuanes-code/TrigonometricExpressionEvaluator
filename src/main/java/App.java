@@ -41,16 +41,15 @@ public class App
                 }
 
                 Parser parser = new Parser(tokens);
-                ASTNode ast = parser.parseToAST();
+                double result = parser.parse();
 
                 System.out.println("\n--- Árbol de Sintaxis Abstracta (AST) ---");
-                System.out.println(ast.toString());
+                System.out.println(parser.getAstNode().toString());
 
-                double result = Evaluator.evaluate(ast);
+                //double result = Evaluator.evaluate(ast);
 
                 System.out.println("\n--- Resultado ---");
                 System.out.printf("  %.6f\n", result);
-                parser.closeScanner();
 
             } catch (Exception e) {
                 System.out.println("\n[ERROR] " + e.getMessage());

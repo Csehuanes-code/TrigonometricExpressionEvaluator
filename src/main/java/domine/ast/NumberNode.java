@@ -7,7 +7,7 @@ import lombok.Getter;
  */
 @Getter
 public class NumberNode extends ASTNode {
-    private double value;
+    private final double value;
 
     public NumberNode(double value) {
         this.value = value;
