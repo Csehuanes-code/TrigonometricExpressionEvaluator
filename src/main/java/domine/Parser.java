@@ -1,5 +1,6 @@
 package domine;
 
+import domine.ast.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,36 +21,90 @@ public class Parser {
         this.scanner = new Scanner(System.in);
     }
 
-    public double parse() throws Exception {
-        double result = A();
+    /**
+     * Parse the expression and return the AST root node
+     */
+    public ASTNode parseToAST() throws Exception {
+        ASTNode root = A();
 
         if (currentToken != null) {
             throw new Exception("Expresión no válida: tokens adicionales después del final");
         }
 
-        return result;
+        return root;
+    }
+
+    /**
+     * Parse and evaluate the expression directly
+     */
+    public double parse() throws Exception {
+        ASTNode ast = parseToAST();
+
+        // Request variable values before evaluation
+        requestVariableValues(ast);
+
+        return ast.evaluate();
+    }
+
+    /**
+     * Get variable values map for external manipulation
+     */
+    public Map<String, Double> getVariableValues() {
+        return variableValues;
+    }
+
+    /**
+     * Set variable values externally (useful for testing)
+     */
+    public void setVariableValue(String name, double value) {
+        variableValues.put(name, value);
+    }
+
+    /**
+     * Recursively find all variables in the AST and request their values
+     */
+    private void requestVariableValues(ASTNode node) {
+        if (node instanceof VariableNode) {
+            VariableNode varNode = (VariableNode) node;
+            String varName = varNode.getName();
+
+            if (!variableValues.containsKey(varName)) {
+                System.out.print("Ingrese el valor de la variable '" + varName + "': ");
+                double value = scanner.nextDouble();
+                variableValues.put(varName, value);
+            }
+        } else if (node instanceof BinaryOperationNode) {
+            BinaryOperationNode binOp = (BinaryOperationNode) node;
+            requestVariableValues(binOp.getLeft());
+            requestVariableValues(binOp.getRight());
+        } else if (node instanceof FunctionNode) {
+            FunctionNode funcNode = (FunctionNode) node;
+            requestVariableValues(funcNode.getArgument());
+        }
     }
 
     // A -> BA'
-    private double A() throws Exception {
-        double value = B();
-        return A_prime(value);
+    private ASTNode A() throws Exception {
+        ASTNode left = B();
+        return A_prime(left);
     }
 
     // A' -> +BA' | -BA' | λ
-    private double A_prime(double inherited) throws Exception {
+    private ASTNode A_prime(ASTNode inherited) throws Exception {
         if (currentToken == null) {
             return inherited;
         }
 
         if (currentToken.getTokenType() == TokenType.PLUS) {
             match(TokenType.PLUS);
-            double value = B();
-            return A_prime(inherited + value);
+            ASTNode right = B();
+            ASTNode node = new BinaryOperationNode("+", inherited, right);
+            return A_prime(node);
         } else if (currentToken.getTokenType() == TokenType.MINUS) {
             match(TokenType.MINUS);
-            double value = B();
-            return A_prime(inherited - value);
+            ASTNode right = B();
+            ASTNode node = new BinaryOperationNode("-", inherited, right);
+            return A_prime(node);
         }
 
         // λ (epsilon)
@@ -57,28 +112,27 @@ public class Parser {
     }
 
     // B -> CB'
-    private double B() throws Exception {
-        double value = C();
-        return B_prime(value);
+    private ASTNode B() throws Exception {
+        ASTNode left = C();
+        return B_prime(left);
     }
 
     // B' -> *CB' | /CB' | λ
-    private double B_prime(double inherited) throws Exception {
+    private ASTNode B_prime(ASTNode inherited) throws Exception {
         if (currentToken == null) {
             return inherited;
         }
 
         if (currentToken.getTokenType() == TokenType.MULTIPLY) {
             match(TokenType.MULTIPLY);
-            double value = C();
-            return B_prime(inherited * value);
+            ASTNode right = C();
+            ASTNode node = new BinaryOperationNode("*", inherited, right);
+            return B_prime(node);
         } else if (currentToken.getTokenType() == TokenType.DIVIDE) {
             match(TokenType.DIVIDE);
-            double value = C();
-            if (value == 0) {
-                throw new Exception("División por cero");
-            }
-            return B_prime(inherited / value);
+            ASTNode right = C();
+            ASTNode node = new BinaryOperationNode("/", inherited, right);
+            return B_prime(node);
         }
 
         // λ (epsilon)
@@ -86,23 +140,23 @@ public class Parser {
     }
 
     // C -> DC'
-    private double C() throws Exception {
-        double value = D();
-        return C_prime(value);
+    private ASTNode C() throws Exception {
+        ASTNode left = D();
+        return C_prime(left);
     }
 
     // C' -> ^DC' | λ
-    private double C_prime(double inherited) throws Exception {
+    private ASTNode C_prime(ASTNode inherited) throws Exception {
         if (currentToken == null) {
             return inherited;
         }
 
         if (currentToken.getTokenType() == TokenType.POWER) {
             match(TokenType.POWER);
-            double exponent = D();
+            ASTNode right = D();
             // Para manejar múltiples potencias de derecha a izquierda
-            exponent = C_prime(exponent);
-            return Math.pow(inherited, exponent);
+            right = C_prime(right);
+            return new BinaryOperationNode("^", inherited, right);
         }
 
         // λ (epsilon)
@@ -110,7 +164,7 @@ public class Parser {
     }
 
     // D -> Función(A) | (A) | Letra | Digito
-    private double D() throws Exception {
+    private ASTNode D() throws Exception {
         if (currentToken == null) {
             throw new Exception("Expresión incompleta");
         }
@@ -120,41 +174,32 @@ public class Parser {
                 currentToken.getTokenType() == TokenType.COS ||
                 currentToken.getTokenType() == TokenType.TAN) {
 
-            TokenType functionType = currentToken.getTokenType();
-            match(functionType);
+            String functionName = currentToken.getLexeme();
+            match(currentToken.getTokenType());
             match(TokenType.LPARENT);
-            double argValue = A();
+            ASTNode argument = A();
             match(TokenType.RPARENT);
 
-            return applyFunction(functionType, argValue);
+            return new FunctionNode(functionName, argument);
         }
         // (A)
         else if (currentToken.getTokenType() == TokenType.LPARENT) {
             match(TokenType.LPARENT);
-            double value = A();
+            ASTNode node = A();
             match(TokenType.RPARENT);
-            return value;
+            return node;
         }
         // Digito
         else if (currentToken.getTokenType() == TokenType.DIGIT) {
             double value = currentToken.getValue();
             match(TokenType.DIGIT);
-            return value;
+            return new NumberNode(value);
         }
         // Variable (Letra)
         else if (currentToken.getTokenType() == TokenType.VARIABLE) {
             String varName = currentToken.getLexeme();
-
-            // Si no tenemos el valor de la variable, pedirlo al usuario
-            if (!variableValues.containsKey(varName)) {
-                System.out.print("Ingrese el valor de la variable '" + varName + "': ");
-                double value = scanner.nextDouble();
-                variableValues.put(varName, value);
-            }
-
-            double value = variableValues.get(varName);
             match(TokenType.VARIABLE);
-            return value;
+            return new VariableNode(varName, variableValues);
         }
         else {
             throw new Exception("Token inesperado: " + currentToken.getLexeme());
@@ -182,13 +227,9 @@ public class Parser {
         }
     }
 
-    private double applyFunction(TokenType functionType, double value) throws Exception {
-        return switch (functionType) {
-            case SIN -> Math.sin(value);
-            case COS -> Math.cos(value);
-            case TAN -> Math.tan(value);
-            default -> throw new Exception("Función no reconocida: " + functionType);
-        };
+    public void closeScanner() {
+        if (scanner != null) {
+            scanner.close();
+        }
     }
-
 }

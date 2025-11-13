@@ -1,6 +1,8 @@
+import domine.Evaluator;
 import domine.Lexer;
 import domine.Parser;
 import domine.Token;
+import domine.ast.ASTNode;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -24,7 +26,6 @@ public class App
             System.out.print("Ingrese una expresión (o 'salir' para terminar): ");
             String input = scanner.nextLine();
 
-
             if (input.equalsIgnoreCase("salir") || input.equalsIgnoreCase("exit")) {
                 break;
             }
@@ -39,12 +40,17 @@ public class App
                     System.out.println("  " + token.getTokenType() + " : " + token.getLexeme());
                 }
 
-                // Fase 2: Análisis sintáctico y evaluación
                 Parser parser = new Parser(tokens);
-                double result = parser.parse();
+                ASTNode ast = parser.parseToAST();
+
+                System.out.println("\n--- Árbol de Sintaxis Abstracta (AST) ---");
+                System.out.println(ast.toString());
+
+                double result = Evaluator.evaluate(ast);
 
                 System.out.println("\n--- Resultado ---");
                 System.out.printf("  %.6f\n", result);
+                parser.closeScanner();
 
             } catch (Exception e) {
                 System.out.println("\n[ERROR] " + e.getMessage());
