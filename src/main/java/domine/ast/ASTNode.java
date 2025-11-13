@@ -5,13 +5,13 @@ package domine.ast;
  */
 public abstract class ASTNode {
     /**
-     * Método abstracto para evaluar el nodo
+     * Metodo abstracto para evaluar el nodo
      * @return El valor numérico del nodo
      */
     public abstract double evaluate() throws Exception;
 
     /**
-     * Método abstracto para representar el árbol en formato texto
+     * Metodo abstracto para representar el árbol en formato texto
      * @param indent Nivel de indentación
      * @return Representación en texto del árbol
      */

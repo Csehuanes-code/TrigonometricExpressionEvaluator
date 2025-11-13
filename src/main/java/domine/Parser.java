@@ -2,6 +2,8 @@ package domine;
 
 import domine.ast.*;
 import lombok.Getter;
+import resources.message.ExpectedMessage;
+import resources.message.Message;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,10 +16,6 @@ public class Parser {
     private Token currentToken;
     @Getter
     private ASTNode astNode;
-    /**
-     * -- GETTER --
-     *  Get variable values map for external manipulation
-     */
     @Getter
     private final Map<String, Double> variableValues;
     private Scanner scanner;
@@ -33,11 +31,11 @@ public class Parser {
     /**
      * Parse the expression and return the AST root node
      */
-    public ASTNode parseToAST() throws Exception {
+    private ASTNode parseToAST() throws Exception {
         ASTNode root = A();
 
         if (currentToken != null) {
-            throw new Exception("Expresión no válida: tokens adicionales después del final");
+            throw new Exception(ExpectedMessage.unValidTokens());
         }
 
         return root;
@@ -57,13 +55,6 @@ public class Parser {
     }
 
     /**
-     * Set variable values externally (useful for testing)
-     */
-    public void setVariableValue(String name, double value) {
-        variableValues.put(name, value);
-    }
-
-    /**
      * Recursively find all variables in the AST and request their values
      */
     private void requestVariableValues(ASTNode node) {
@@ -72,7 +63,7 @@ public class Parser {
             String varName = varNode.getName();
 
             if (!variableValues.containsKey(varName)) {
-                System.out.print("Ingrese el valor de la variable '" + varName + "': ");
+                Message.askVariableName(varName);
                 double value = scanner.nextDouble();
                 variableValues.put(varName, value);
             }
@@ -205,17 +196,17 @@ public class Parser {
             return new VariableNode(varName, variableValues);
         }
         else {
-            throw new Exception("Token inesperado: " + currentToken.getLexeme());
+            throw new Exception(ExpectedMessage.unExpectedToken(currentToken.getLexeme()));
         }
     }
 
     private void match(TokenType expectedType) throws Exception {
         if (currentToken == null) {
-            throw new Exception("Se esperaba " + expectedType + " pero se encontró el final de la expresión");
+            throw new Exception(ExpectedMessage.expectedTokenTypeButFound(expectedType, "el final de la expresión"));
         }
 
         if (currentToken.getTokenType() != expectedType) {
-            throw new Exception("Se esperaba " + expectedType + " pero se encontró " + currentToken.getTokenType());
+            throw new Exception(ExpectedMessage.expectedTokenTypeButFound(expectedType,currentToken.getTokenType().toString()));
         }
 
         advance();
@@ -229,11 +220,4 @@ public class Parser {
             currentToken = null;
         }
     }
-
-    public void closeScanner() {
-        if (scanner != null) {
-            scanner.close();
-        }
-    }
-
 }

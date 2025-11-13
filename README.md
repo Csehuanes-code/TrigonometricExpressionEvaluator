@@ -5,37 +5,36 @@ Este proyecto implementa un reconocedor descendente (parser recursivo) y evaluad
 
 ## Gramática LL(1)
 
-\`\`\`
-A  -> BA'
-A' -> +BA' | -BA' | λ
-B  -> CB'
-B' -> *CB' | /CB' | λ
-C  -> DC'
-C' -> ^DC' | λ
+A  -> BA'  
+A' -> +BA' | -BA' | λ  
+B  -> CB'  
+B' -> *CB' | /CB' | λ  
+C  -> DC'  
+C' -> ^DC' | λ  
 D  -> Función(A) | (A) | Letra | Digito
-\`\`\`
+
 
 ### Terminales
 - Operadores: `+`, `-`, `*`, `/`, `^`
 - Paréntesis: `(`, `)`
-- Funciones: `sin`, `cos`, `tan` (case-insensitive)
+- Funciones: `sen`,`sin`, `cos`, `tan` (case-insensitive)
 - Dígitos: números reales (ej: 3, 0.5, .2, -2, 2E2, -25.32)
 - Variables: letras (a-z, A-Z)
 
 ## Estructura del Proyecto
 
 \`\`\`
-domine/
-├── Token.java          - Clase que representa un token
-├── TokenType.java      - Enum con tipos de tokens
-├── Dictionary.java     - Mapeo de palabras reservadas
-├── Lexer.java          - Analizador léxico (tokenizador)
+domine/  
+├── Token.java          - Clase que representa un token  
+├── TokenType.java      - Enum con tipos de tokens  
+├── Dictionary.java     - Mapeo de palabras reservadas  
+├── Lexer.java          - Analizador léxico (tokenizador)  
 ├── Parser.java         - Analizador sintáctico con construcción de AST
-├── Evaluator.java      - Evaluador de AST
-└── ast/
-├── ASTNode.java              - Clase base abstracta para nodos
-├── NumberNode.java           - Nodo para constantes numéricas
-├── VariableNode.java         - Nodo para variables simbólicas
+├── Evaluator.java      - Evaluador de AST  
+└── ast/   
+├── ASTNode.java              - Clase base abstracta para nodos  
+├── NumberNode.java           - Nodo para constantes numéricas  
+├── VariableNode.java         - Nodo para variables simbólicas  
 ├── BinaryOperationNode.java  - Nodo para operaciones binarias
 └── FunctionNode.java         - Nodo para funciones trigonométricas
 
@@ -103,11 +102,11 @@ java ASTVisualizerDemo
 
 ### Expresiones válidas:
 \`\`\`
-sin(3.14/2) + cos(0)*2^2       → 5.0
-sin(0) + cos(0)                 → 1.0
-2^3^2                           → 512.0 (asociatividad derecha)
-(3+5)*2                         → 16.0
-cos(x)^2 + sin(x)^2            → 1.0 (identidad trigonométrica)
+sin(3.14/2) + cos(0)*2^2       → 5.0   
+sin(0) + cos(0)                 → 1.0  
+2^3^2                           → 512.0 (asociatividad derecha)  
+(3+5)*2                         → 16.0  
+cos(x)^2 + sin(x)^2            → 1.0 (identidad trigonométrica)  
 tan(x^2 + sin(x))              → evalúa con valor de x
 \`\`\`
 
@@ -116,9 +115,9 @@ tan(x^2 + sin(x))              → evalúa con valor de x
 Expresión: `sin(x) + 2 * 3`
 
 \`\`\`
-BinaryOp(+)
+BinaryOp(+)  
 ├─ FunctionNode(sin)
-│   └─ VariableNode(x)
+│   └─ VariableNode(x)  
 └─ BinaryOp(*)
 ├─ NumberNode(2.0)
 └─ NumberNode(3.0)

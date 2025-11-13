@@ -1,6 +1,7 @@
 package domine.ast;
 
 import lombok.Getter;
+import resources.message.ExpectedMessage;
 
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public class VariableNode extends ASTNode {
     @Override
     public double evaluate() throws Exception {
         if (!variableValues.containsKey(name)) {
-            throw new Exception("Variable no definida: " + name);
+            throw new Exception(ExpectedMessage.unDefinedVariable(name));
         }
         return variableValues.get(name);
     }

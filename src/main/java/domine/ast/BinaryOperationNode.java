@@ -1,6 +1,7 @@
 package domine.ast;
 
 import lombok.Getter;
+import resources.message.ExpectedMessage;
 
 /**
  * Nodo que representa una operación binaria (+, -, *, /, ^)
@@ -28,12 +29,12 @@ public class BinaryOperationNode extends ASTNode {
             case "*" -> leftValue * rightValue;
             case "/" -> {
                 if (rightValue == 0) {
-                    throw new Exception("División por cero");
+                    throw new Exception(ExpectedMessage.dividedByZero());
                 }
                 yield leftValue / rightValue;
             }
             case "^" -> Math.pow(leftValue, rightValue);
-            default -> throw new Exception("Operador desconocido: " + operator);
+            default -> throw new Exception(ExpectedMessage.unknownOperator(operator));
         };
     }
 

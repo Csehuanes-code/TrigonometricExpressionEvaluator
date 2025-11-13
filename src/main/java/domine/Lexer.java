@@ -1,5 +1,7 @@
 package domine;
 
+import resources.message.ExpectedMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +39,7 @@ public class Lexer {
                 tokens.add(readOperatorOrParenthesis());
             }
             else {
-                throw new Exception("Caracter no reconocido: " + currentChar + " en posición " + position);
+                throw new Exception(ExpectedMessage.unRecognizedCharacter(currentChar, position));
             }
         }
 
@@ -82,7 +84,7 @@ public class Lexer {
 
         String numStr = number.toString();
         if (!isCorrectDigit(numStr)) {
-            throw new Exception("Número mal formado: " + numStr);
+            throw new Exception(ExpectedMessage.unValidNumberFormat(numStr));
         }
 
         Token token = new Token();

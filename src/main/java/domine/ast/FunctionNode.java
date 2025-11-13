@@ -1,6 +1,7 @@
 package domine.ast;
 
 import lombok.Getter;
+import resources.message.ExpectedMessage;
 
 /**
  * Nodo que representa una función trigonométrica (sin, cos, tan)
@@ -23,15 +24,19 @@ public class FunctionNode extends ASTNode {
             case "sen", "sin" -> Math.sin(argValue);
             case "cos" -> Math.cos(argValue);
             case "tan" -> Math.tan(argValue);
-            default -> throw new Exception("Función desconocida: " + functionName);
+            default -> throw new Exception(ExpectedMessage.unknownFunction(functionName));
         };
     }
 
     @Override
     public String toTreeString(String indent) {
+        return indent + "FunctionNode(" + functionName + ")\n" +
+                argument.toTreeString(indent + "  └─ ");
+        /*
         StringBuilder sb = new StringBuilder();
         sb.append(indent).append("FunctionNode(").append(functionName).append(")\n");
         sb.append(argument.toTreeString(indent + "  └─ "));
         return sb.toString();
+         */
     }
 }

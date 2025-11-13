@@ -1,11 +1,8 @@
-import domine.Evaluator;
 import domine.Lexer;
 import domine.Parser;
 import domine.Token;
-import domine.ast.ASTNode;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class App 
@@ -46,7 +43,6 @@ public class App
                 System.out.println("\n--- Árbol de Sintaxis Abstracta (AST) ---");
                 System.out.println(parser.getAstNode().toString());
 
-                //double result = Evaluator.evaluate(ast);
 
                 System.out.println("\n--- Resultado ---");
                 System.out.printf("  %.6f\n", result);
