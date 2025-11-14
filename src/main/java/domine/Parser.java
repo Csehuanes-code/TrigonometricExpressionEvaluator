@@ -21,15 +21,17 @@ import java.util.Scanner;
  * A' -> + B A' | - B A' | λ
  * B  -> C B'
  * B' -> * C B' | / C B' | λ
- * C  -> D C'
- * C' -> ^ D C' | λ
- * D  -> -D | Función(A) | (A) | Digito | Variable
+ * C  -> U C'
+ * C' -> ^ U C' | λ
+ * U  -> -U | F
+ * F  -> Función(A) | (A) | Digito | Variable
  *
  * Donde:
  * - A maneja suma y resta (precedencia más baja)
  * - B maneja multiplicación y división (precedencia media)
  * - C maneja potenciación (precedencia más alta, asociativa a la derecha)
- * - D maneja factores: funciones, paréntesis, números y variables
+ * - U maneja negación unaria
+ * - F maneja factores: funciones, paréntesis, números y variables
  *
  * ========== CARACTERÍSTICAS ==========
  * - Análisis descendente recursivo (cada no-terminal es una función)
@@ -102,7 +104,7 @@ public class Parser {
     }
 
     /**
-     * Método principal de parsing.
+     * Metodo principal de parsing.
      * Construye el AST completo a partir de los tokens.
      *
      * @return Nodo raíz del AST
@@ -148,7 +150,7 @@ public class Parser {
      *
      * @param node Nodo actual del AST
      *
-     * Este método realiza un recorrido en profundidad del árbol buscando
+     * Este metodo realiza un recorrido en profundidad del árbol buscando
      * nodos de tipo VariableNode y solicitando sus valores solo una vez.
      */
     private void requestVariableValues(ASTNode node) {
@@ -264,17 +266,17 @@ public class Parser {
     }
 
     /**
-     * C -> D C'
+     * C -> U C'
      *
      * Procesa expresiones con potenciación (precedencia más alta).
      */
     private ASTNode C() throws Exception {
-        ASTNode left = D();
+        ASTNode left = U();
         return C_prime(left);
     }
 
     /**
-     * C' -> ^D C' | λ
+     * C' -> ^U C' | λ
      *
      * Maneja la recursión por la derecha para potenciación.
      *
@@ -292,7 +294,7 @@ public class Parser {
 
         if (currentToken.getTokenType() == TokenType.POWER) {
             match(TokenType.POWER);
-            ASTNode right = D();
+            ASTNode right = U();
             // CLAVE: Procesar recursivamente el lado derecho primero
             right = C_prime(right);
             // Ahora crear el nodo con el subárbol derecho completo
@@ -303,7 +305,35 @@ public class Parser {
     }
 
     /**
-     * D -> -D | Función(A) | (A) | Digito | Variable
+     * U -> -U | F
+     *
+     * Nuevo nivel para manejar negación unaria.
+     * La negación tiene precedencia MAYOR que suma/resta/mult/div
+     * pero MENOR que potenciación.
+     *
+     * Esto asegura que: -2^2 = -(2^2) = -4, no (-2)^2 = 4
+     *
+     * @return Nodo del AST representando la expresión con posible negación
+     */
+    private ASTNode U() throws Exception {
+        if (currentToken == null) {
+            throw new Exception("Expresión incompleta");
+        }
+
+        // Caso: Negación unaria -> -U
+        if (currentToken.getTokenType() == TokenType.MINUS) {
+            match(TokenType.MINUS);
+            ASTNode operand = U(); // Recursivamente procesar lo que sigue al '-'
+            // Crear un nodo especial que representa: 0 - operand
+            return new BinaryOperationNode("-", new NumberNode(0), operand);
+        }
+
+        // Caso: No hay negación, procesar factor
+        return F();
+    }
+
+    /**
+     * F -> Función(A) | (A) | Digito | Variable
      *
      * Procesa los elementos atómicos de la expresión:
      * - Funciones trigonométricas con sus argumentos
@@ -313,22 +343,14 @@ public class Parser {
      *
      * @return Nodo del AST representando el factor
      *
-     * Este es el método más complejo ya que maneja múltiples casos.
+     * Este es el metodo que maneja los elementos más básicos de la expresión.
      */
-    private ASTNode D() throws Exception {
+    private ASTNode F() throws Exception {
         if (currentToken == null) {
             throw new Exception("Expresión incompleta");
         }
 
-        // Caso 1: Negación unaria -> -D
-        if (currentToken.getTokenType() == TokenType.MINUS) {
-            match(TokenType.MINUS);
-            ASTNode operand = D(); // Recursivamente procesar lo que sigue al '-'
-            // Crear un nodo especial que representa: 0 - operand
-            return new BinaryOperationNode("-", new NumberNode(0), operand);
-        }
-
-        // Caso 2: Función trigonométrica -> Función(A)
+        // Caso 1: Función trigonométrica -> Función(A)
         if (currentToken.getTokenType() == TokenType.SIN ||
                 currentToken.getTokenType() == TokenType.COS ||
                 currentToken.getTokenType() == TokenType.TAN) {
@@ -341,20 +363,20 @@ public class Parser {
 
             return new FunctionNode(functionName, argument);
         }
-        // Caso 3: Expresión entre paréntesis -> (A)
+        // Caso 2: Expresión entre paréntesis -> (A)
         else if (currentToken.getTokenType() == TokenType.LPARENT) {
             match(TokenType.LPARENT);
             ASTNode node = A();
             match(TokenType.RPARENT);
             return node;
         }
-        // Caso 4: Número constante -> Digito
+        // Caso 3: Número constante -> Digito
         else if (currentToken.getTokenType() == TokenType.DIGIT) {
             double value = currentToken.getValue();
             match(TokenType.DIGIT);
             return new NumberNode(value);
         }
-        // Caso 5: Variable simbólica -> Letra
+        // Caso 4: Variable simbólica -> Letra
         else if (currentToken.getTokenType() == TokenType.VARIABLE) {
             String varName = currentToken.getLexeme();
             match(TokenType.VARIABLE);
@@ -372,7 +394,7 @@ public class Parser {
      * @param expectedType Tipo de token que se espera encontrar
      * @throws Exception Si el token actual no coincide con el esperado
      *
-     * Este método es fundamental para el análisis sintáctico predictivo.
+     * Este metodo es fundamental para el análisis sintáctico predictivo.
      * Valida que la secuencia de tokens siga las reglas de la gramática.
      */
     private void match(TokenType expectedType) throws Exception {

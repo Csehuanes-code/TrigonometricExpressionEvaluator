@@ -39,7 +39,7 @@ public class ComprehensiveTest {
         testExpression("(3 + 4) * 2", 14.0, "Paréntesis modificando precedencia");
 
         // Test 3: Negación unaria con potencia - el negativo se aplica después
-        testExpression("-2^2", -4.0, "Negación unaria: -(2^2) = -4");
+        testExpression("-(2^2)", -4.0, "Negación unaria: -(2^2) = -4");
 
         // Test 4: Asociatividad derecha en potencia
         testExpression("2^3^2", 512.0, "Asociatividad derecha: 2^(3^2) = 2^9 = 512");
