@@ -11,7 +11,7 @@ B  -> CB'
 B' -> *CB' | /CB' | λ  
 C  -> DC'  
 C' -> ^DC' | λ  
-D  -> Función(A) | (A) | Letra | Digito
+D  -> -D | Función(A) | (A) | Letra | Digito
 
 
 ### Terminales

@@ -23,7 +23,7 @@ import java.util.Scanner;
  * B' -> * C B' | / C B' | λ
  * C  -> D C'
  * C' -> ^ D C' | λ
- * D  -> Función(A) | (A) | Digito | Variable
+ * D  -> -D | Función(A) | (A) | Digito | Variable
  *
  * Donde:
  * - A maneja suma y resta (precedencia más baja)
@@ -40,11 +40,12 @@ import java.util.Scanner;
  * - Solicitud interactiva de valores para variables
  *
  * ========== PRECEDENCIA DE OPERADORES (de mayor a menor) ==========
- * 1. Funciones trigonométricas: sin(), cos(), tan()
- * 2. Paréntesis: ( )
- * 3. Potenciación: ^ (asociativa a la derecha)
- * 4. Multiplicación y División: *, /
- * 5. Suma y Resta: +, -
+ * 1. Negación unaria: -
+ * 2. Funciones trigonométricas: sin(), cos(), tan()
+ * 3. Paréntesis: ( )
+ * 4. Potenciación: ^ (asociativa a la derecha)
+ * 5. Multiplicación y División: *, /
+ * 6. Suma y Resta: +, -
  *
  * Ejemplo de parsing:
  *   Entrada: "3 + 4 * 2"
@@ -101,7 +102,7 @@ public class Parser {
     }
 
     /**
-     * Metodo principal de parsing.
+     * Método principal de parsing.
      * Construye el AST completo a partir de los tokens.
      *
      * @return Nodo raíz del AST
@@ -147,7 +148,7 @@ public class Parser {
      *
      * @param node Nodo actual del AST
      *
-     * Este metodo realiza un recorrido en profundidad del árbol buscando
+     * Este método realiza un recorrido en profundidad del árbol buscando
      * nodos de tipo VariableNode y solicitando sus valores solo una vez.
      */
     private void requestVariableValues(ASTNode node) {
@@ -281,8 +282,8 @@ public class Parser {
      * Esto significa: 2^3^2 = 2^(3^2) = 2^9 = 512
      * No es: (2^3)^2 = 8^2 = 64
      *
-     * La asociatividad derecha se logra construyendo primero el subárbol derecho
-     * completo antes de crear el nodo de potencia.
+     * La asociatividad derecha se logra construyendo primero el subárbol derecho completo
+     * antes de crear el nodo de potencia.
      */
     private ASTNode C_prime(ASTNode inherited) throws Exception {
         if (currentToken == null) {
@@ -302,7 +303,7 @@ public class Parser {
     }
 
     /**
-     * D -> Función(A) | (A) | Letra | Digito
+     * D -> -D | Función(A) | (A) | Digito | Variable
      *
      * Procesa los elementos atómicos de la expresión:
      * - Funciones trigonométricas con sus argumentos
@@ -312,14 +313,22 @@ public class Parser {
      *
      * @return Nodo del AST representando el factor
      *
-     * Este es el metodo más complejo ya que maneja múltiples casos.
+     * Este es el método más complejo ya que maneja múltiples casos.
      */
     private ASTNode D() throws Exception {
         if (currentToken == null) {
             throw new Exception("Expresión incompleta");
         }
 
-        // Caso 1: Función trigonométrica -> Función(A)
+        // Caso 1: Negación unaria -> -D
+        if (currentToken.getTokenType() == TokenType.MINUS) {
+            match(TokenType.MINUS);
+            ASTNode operand = D(); // Recursivamente procesar lo que sigue al '-'
+            // Crear un nodo especial que representa: 0 - operand
+            return new BinaryOperationNode("-", new NumberNode(0), operand);
+        }
+
+        // Caso 2: Función trigonométrica -> Función(A)
         if (currentToken.getTokenType() == TokenType.SIN ||
                 currentToken.getTokenType() == TokenType.COS ||
                 currentToken.getTokenType() == TokenType.TAN) {
@@ -327,25 +336,25 @@ public class Parser {
             String functionName = currentToken.getLexeme();
             match(currentToken.getTokenType());
             match(TokenType.LPARENT);
-            ASTNode argument = A(); // El argumento es una expresión completa
+            ASTNode argument = A();
             match(TokenType.RPARENT);
 
             return new FunctionNode(functionName, argument);
         }
-        // Caso 2: Expresión entre paréntesis -> (A)
+        // Caso 3: Expresión entre paréntesis -> (A)
         else if (currentToken.getTokenType() == TokenType.LPARENT) {
             match(TokenType.LPARENT);
-            ASTNode node = A(); // Procesar la expresión dentro del paréntesis
+            ASTNode node = A();
             match(TokenType.RPARENT);
             return node;
         }
-        // Caso 3: Número constante -> Digito
+        // Caso 4: Número constante -> Digito
         else if (currentToken.getTokenType() == TokenType.DIGIT) {
             double value = currentToken.getValue();
             match(TokenType.DIGIT);
             return new NumberNode(value);
         }
-        // Caso 4: Variable simbólica -> Letra
+        // Caso 5: Variable simbólica -> Letra
         else if (currentToken.getTokenType() == TokenType.VARIABLE) {
             String varName = currentToken.getLexeme();
             match(TokenType.VARIABLE);
@@ -363,7 +372,7 @@ public class Parser {
      * @param expectedType Tipo de token que se espera encontrar
      * @throws Exception Si el token actual no coincide con el esperado
      *
-     * Este metodo es fundamental para el análisis sintáctico predictivo.
+     * Este método es fundamental para el análisis sintáctico predictivo.
      * Valida que la secuencia de tokens siga las reglas de la gramática.
      */
     private void match(TokenType expectedType) throws Exception {

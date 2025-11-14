@@ -72,9 +72,7 @@ public class Lexer {
             // - Dígito: 3, 42
             // - Punto: .5, .123
             // - Signo menos seguido de dígito o punto: -2, -.5
-            if (Character.isDigit(currentChar) || currentChar == '.' ||
-                    (currentChar == '-' && position + 1 < input.length() &&
-                            (Character.isDigit(input.charAt(position + 1)) || input.charAt(position + 1) == '.'))) {
+            if (Character.isDigit(currentChar) || currentChar == '.') {
                 tokens.add(readNumber());
             }
             // ========== Reconocimiento de Identificadores ==========
