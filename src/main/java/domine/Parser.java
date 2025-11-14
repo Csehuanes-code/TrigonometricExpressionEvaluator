@@ -28,6 +28,14 @@ public class Parser {
         this.scanner = new Scanner(System.in);
     }
 
+    public void resetParser(){
+        this.tokens.clear();
+        this.currentTokenIndex = 0;
+        this.currentToken = null;
+        astNode = null;
+        //scanner.close();
+    }
+
     /**
      * Parse the expression and return the AST root node
      */
