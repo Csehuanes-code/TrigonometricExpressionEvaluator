@@ -9,9 +9,10 @@ A  -> BA'
 A' -> +BA' | -BA' | λ  
 B  -> CB'  
 B' -> *CB' | /CB' | λ  
-C  -> DC'  
-C' -> ^DC' | λ  
-D  -> -D | Función(A) | (A) | Letra | Digito
+C  -> UC'  
+C' -> ^UC' | λ  
+U  -> -U | λ
+F  -> Función(A) | (A) | Variable | Digito
 
 
 ### Terminales
